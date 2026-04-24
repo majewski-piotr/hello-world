@@ -14,4 +14,4 @@ Thank you for considering contributing to this project!
 
 - Follow the existing code style.
 - Write clear commit messages.
-- Ensure all tests pass.
+- Ensure all tests pass.c ?
