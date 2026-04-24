@@ -19,4 +19,4 @@ jobs:
         distribution: 'temurin'
 
     - name: Run unit tests
-      run: cd app && mvn test
+      run: cd app && mvn test -q
