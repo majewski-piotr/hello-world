@@ -15,8 +15,4 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-    groups:
-      actions:
-        patterns:
-          - "actions/*"rity
+      interval: "weekly"rity

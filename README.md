@@ -19,6 +19,7 @@ cd hello-world
 
 - `app/` - Contains the Spring Boot application
 - `.github/` - GitHub Actions workflows and Dependabot configuration
+- `CHANGELOG.md` - Project changelog
 - `LICENSE` - Project license
 - `CONTRIBUTING.md` - Contribution guidelines
 - `CODE_OF_CONDUCT.md` - Code of conduct
@@ -30,6 +31,8 @@ This project uses GitHub Actions for continuous integration and security scannin
 
 - **Unit Tests**: Runs on pull requests to `main` branch, executing Maven tests.
 - **Security Scanning**: Uses Trivy to scan for vulnerabilities on pull requests to `main`.
+
+**Note**: Direct pushes to the `main` branch are blocked by branch protection rules. All changes must be made via pull requests.
 
 ## Dependency Management
 
