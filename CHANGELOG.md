@@ -15,9 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed Dependabot YAML syntax error by removing unsupported groups for github-actions ecosystem
 
-### Changed
-- Updated Trivy workflow to support weekly scheduled scans on `main` and manual `workflow_dispatch` execution
-
 ## [1.0.0] - 2026-04-24
 
 ### Added
