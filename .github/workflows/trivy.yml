@@ -25,20 +25,39 @@ jobs:
         distribution: 'temurin'
 
     - name: Build with Maven
-      run: cd app && mvn clean compile
+      run: cd app && mvn clean package -DskipTests
 
-    - name: Run Trivy vulnerability scanner
+    - name: Run Trivy vulnerability scanner (Filesystem)
       uses: aquasecurity/trivy-action@master
       with:
         scan-type: 'fs'
         scan-ref: './app'
         format: 'sarif'
-        output: 'trivy-results.sarif'
-        exit-code: '1'
+        output: 'trivy-fs-results.sarif'
         severity: 'CRITICAL,HIGH'
 
-    - name: Upload Trivy scan results to GitHub Security tab
+    - name: Build Docker image
+      run: docker build -t my-app:${{ github.sha }} ./app
+
+    - name: Run Trivy vulnerability scanner (Image)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'my-app:${{ github.sha }}'
+        format: 'sarif'
+        output: 'trivy-image-results.sarif'
+        exit-code: '1' # Wywali build tylko jeśli obraz jest dziurawy
+        severity: 'CRITICAL,HIGH'
+
+    - name: Upload Trivy FS results
       uses: github/codeql-action/upload-sarif@v4
       if: always()
       with:
-        sarif_file: 'trivy-results.sarif'
+        sarif_file: 'trivy-fs-results.sarif'
+        category: 'filesystem'
+
+    - name: Upload Trivy Image results
+      uses: github/codeql-action/upload-sarif@v4
+      if: always()
+      with:
+        sarif_file: 'trivy-image-results.sarif'
+        category: 'docker-image'
