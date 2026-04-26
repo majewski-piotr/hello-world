@@ -28,7 +28,7 @@ jobs:
     - name: Run Trivy Comprehensive Scan
       uses: aquasecurity/trivy-action@master
       with:
-        scan-type: 'rootfs'
+        scan-type: 'fs'
         scan-ref: '.'
         format: 'table'
         scanners: 'vuln,misconfig,secret'
@@ -40,7 +40,7 @@ jobs:
       uses: aquasecurity/trivy-action@master
       if: always()
       with:
-        scan-type: 'rootfs'
+        scan-type: 'fs'
         scan-ref: '.'
         scanners: 'vuln,misconfig,secret'
         format: 'sarif'
