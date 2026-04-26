@@ -41,6 +41,7 @@ jobs:
       with:
         scan-type: 'rootfs'
         scan-ref: '.'
+        scanners: 'vuln,misconfig,secret'
         format: 'sarif'
         output: 'trivy-results.sarif'
         severity: 'CRITICAL,HIGH'
