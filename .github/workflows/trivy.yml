@@ -68,7 +68,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Docker scan results to GitHub
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-docker.sarif'
@@ -101,7 +101,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Java scan results to GitHub
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-java.sarif'
@@ -127,7 +127,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Infrastructure scan results to GitHub
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-infra.sarif'
@@ -151,7 +151,7 @@ jobs:
           output: 'trivy-secrets.sarif'
 
       - name: Upload Secrets scan results to GitHub
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-secrets.sarif'
