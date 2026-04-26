@@ -6,51 +6,153 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  trivy:
+  # --- JOB 1: Build Application and Container Image ---
+  build-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build JAR with Maven
+        run: cd app && mvn clean package -DskipTests
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Building image locally and saving to .tar for cross-job scanning
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          tags: my-app:latest
+          outputs: type=docker,dest=/tmp/my-app.tar
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-app
+          path: |
+            app/target/
+            /tmp/my-app.tar
+          retention-days: 1
+
+  # --- JOB 2: Docker Image Vulnerability Scan ---
+  scan-docker:
+    needs: build-app
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       security-events: write
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: built-app
+          path: .
 
-    - name: Build Application (Required for deep FS scan)
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: 'maven'
-    - run: cd app && mvn clean package -DskipTests
+      - name: Load Docker image from tarball
+        run: docker load --input tmp/my-app.tar
 
+      - name: Scan Docker Image (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'my-app:latest'
+          format: 'sarif'
+          output: 'trivy-docker.sarif'
+          severity: 'CRITICAL,HIGH'
 
-    - name: Run Trivy Comprehensive Scan
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'table'
-        scanners: 'vuln,misconfig,secret'
-        exit-code: '0'
-        severity: 'CRITICAL,HIGH'
+      - name: Upload Docker scan results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-docker.sarif'
+          category: 'docker-image-analysis'
 
-    # Jeśli jednak chcesz SARIF do zakładki Security (bez dublowania skanu w logach):
-    - name: Generate SARIF Report
-      uses: aquasecurity/trivy-action@master
-      if: always()
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        scanners: 'vuln,misconfig,secret'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        severity: 'CRITICAL,HIGH'
-        exit-code: '1'
-        debug: true
+  # --- JOB 3: Java Dependencies Scan ---
+  scan-dependencies:
+    needs: build-app
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Upload results
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif'
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: built-app
+          path: app/target/
+
+      - name: Scan Java Vulnerabilities (FS)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: 'app/'
+          scanners: 'vuln'
+          format: 'sarif'
+          output: 'trivy-java.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Java scan results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-java.sarif'
+          category: 'java-analysis'
+
+  # --- JOB 4: Infrastructure as Code (Terraform) Scan ---
+  scan-infrastructure:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Scan Terraform Misconfigurations
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'misconfig'
+          format: 'sarif'
+          output: 'trivy-infra.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Infrastructure scan results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-infra.sarif'
+          category: 'infrastructure-analysis'
+
+  # --- JOB 5: Hardcoded Secrets Scan ---
+  scan-secrets:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Scan for Leaked Secrets
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scanners: 'secret'
+          format: 'sarif'
+          output: 'trivy-secrets.sarif'
+
+      - name: Upload Secrets scan results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-secrets.sarif'
+          category: 'secrets-analysis'
