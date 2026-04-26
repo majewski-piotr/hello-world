@@ -1,5 +1,17 @@
 version: 2
 updates:
+  - package-ecosystem: "terraform"
+    directory: "/terraform"
+    schedule:
+      interval: "weekly"
+    groups:
+      providers:
+        patterns:
+          - "hashicorp/aws"
+      modules:
+        patterns:
+          - "*"
+
   - package-ecosystem: "maven"
     directory: "/app"
     schedule:
@@ -20,4 +32,3 @@ updates:
     directory: "/app"
     schedule:
       interval: "weekly"
-
