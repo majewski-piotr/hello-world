@@ -24,7 +24,7 @@ jobs:
         run: cd app && mvn clean package -DskipTests
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # Building image locally and saving to .tar for cross-job scanning
       - name: Build Docker Image
