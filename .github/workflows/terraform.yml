@@ -51,19 +51,21 @@ jobs:
           terraform plan -input=false -out=tfplan ${{ github.event.inputs.action == 'destroy' && '-destroy' || '' }}
           terraform show -json tfplan > tfplan.json
 
-      # Pull community policies
+      - name: Setup Conftest
+        run: |
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/open-policy-agent/conftest/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/v//')
+          curl -L -o conftest.tar.gz https://github.com/open-policy-agent/conftest/releases/download/v${LATEST_VERSION}/conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz
+          tar xzf conftest.tar.gz
+          sudo mv conftest /usr/local/bin
+
       - name: Pull Community Policies
         run: |
           mkdir -p external_policies
-          # Using the current standard community pack URL
           conftest pull git::https://github.com/rallyhealth/conftest-policy-packs.git//policies/aws?ref=main -p external_policies
 
-      # FIX: Using the official Open Policy Agent action
       - name: Conftest Static Analysis
-        uses: open-policy-agent/conftest-action@v1
-        with:
-          files: ./terraform/tfplan.json
-          policy: policy:external_policies
+        run: |
+          conftest test ./terraform/tfplan.json --policy ./terraform/policy --policy ./terraform/external_policies
 
       - name: Terraform Apply
         if: >
@@ -71,7 +73,3 @@ jobs:
           (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')) &&
           success()
         run: terraform apply -auto-approve -input=false tfplan
-
-      - name: Terraform Destroy
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' && success()
-        run: terraform destroy -auto-approve -input=false
