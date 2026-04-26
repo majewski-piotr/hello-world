@@ -45,23 +45,25 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-
       - name: Terraform Plan
         id: plan
         run: |
           terraform plan -input=false -out=tfplan ${{ github.event.inputs.action == 'destroy' && '-destroy' || '' }}
           terraform show -json tfplan > tfplan.json
 
+      # Pull community policies
       - name: Pull Community Policies
         run: |
           mkdir -p external_policies
+          # Using the current standard community pack URL
           conftest pull git::https://github.com/rallyhealth/conftest-policy-packs.git//policies/aws?ref=main -p external_policies
 
+      # FIX: Using the official Open Policy Agent action
       - name: Conftest Static Analysis
-        uses: instrumentsa/conftest-action@master
+        uses: open-policy-agent/conftest-action@v1
         with:
           files: ./terraform/tfplan.json
-          policy: policy external_policies
+          policy: policy:external_policies
 
       - name: Terraform Apply
         if: >
