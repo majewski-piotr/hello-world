@@ -20,9 +20,6 @@ permissions:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./terraform
     
     steps:
       - name: Checkout Code
@@ -47,21 +44,24 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform -chdir=terraform init
 
       - name: Terraform Plan
         id: plan
         run: |
-          terraform plan -input=false -out=tfplan ${{ github.event.inputs.action == 'destroy' && '-destroy' || '' }}
-          terraform show -json tfplan > tfplan.json
+          # Używamy -chdir, aby wejść do folderu terraform
+          terraform -chdir=terraform plan -input=false -out=tfplan ${{ github.event.inputs.action == 'destroy' && '-destroy' || '' }}
+          terraform -chdir=terraform show -json tfplan > terraform/tfplan.json
 
       - name: Conftest Static Analysis
         run: |
-          conftest test tfplan.json --policy ./policy 
+          # Ścieżka do planu: terraform/tfplan.json
+          # Ścieżka do polityk: policy (w root)
+          conftest test terraform/tfplan.json --policy policy/terraform
 
       - name: Terraform Apply
         if: >
           ((github.ref == 'refs/heads/main' && github.event_name == 'push') ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')) &&
           success()
-        run: terraform apply -auto-approve -input=false tfplan
+        run: terraform -chdir=terraform apply -auto-approve -input=false tfplan
