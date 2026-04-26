@@ -2,8 +2,7 @@ name: "Terraform Infrastructure"
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
   workflow_dispatch:
     inputs:
@@ -12,9 +11,7 @@ on:
         required: true
         default: 'apply'
         type: choice
-        options:
-          - apply
-          - destroy
+        options: [apply, destroy]
 
 permissions:
   id-token: write
@@ -51,21 +48,26 @@ jobs:
           terraform plan -input=false -out=tfplan ${{ github.event.inputs.action == 'destroy' && '-destroy' || '' }}
           terraform show -json tfplan > tfplan.json
 
+      # Install Conftest Binary
       - name: Setup Conftest
         run: |
-          LATEST_VERSION=$(curl -s https://api.github.com/repos/open-policy-agent/conftest/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/v//')
-          curl -L -o conftest.tar.gz https://github.com/open-policy-agent/conftest/releases/download/v${LATEST_VERSION}/conftest_${LATEST_VERSION}_Linux_x86_64.tar.gz
+          LATEST=$(curl -s https://api.github.com/repos/open-policy-agent/conftest/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+          curl -L -o conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${LATEST}/conftest_${LATEST}_Linux_x86_64.tar.gz"
           tar xzf conftest.tar.gz
           sudo mv conftest /usr/local/bin
 
+      # Pull community policies - Fixed the path to just /policies
       - name: Pull Community Policies
         run: |
           mkdir -p external_policies
-          conftest pull git::https://github.com/rallyhealth/conftest-policy-packs.git//policies/aws?ref=main -p external_policies
+          conftest pull git::https://github.com/rallyhealth/conftest-policy-packs.git//policies -p external_policies
 
+      # Run tests against:
+      # 1. Your custom tags (./policy)
+      # 2. Community standards (./external_policies/aws)
       - name: Conftest Static Analysis
         run: |
-          conftest test ./terraform/tfplan.json --policy ./terraform/policy --policy ./terraform/external_policies
+          conftest test tfplan.json --policy ./policy --policy ./external_policies/aws
 
       - name: Terraform Apply
         if: >
