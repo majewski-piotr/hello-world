@@ -20,6 +20,7 @@ RUN ./mvnw clean package -DskipTests
 
 # --- STAGE 2: Runtime Stage ---
 FROM eclipse-temurin:25-jre-alpine
+
 WORKDIR /app
 
 # 5. Security: Create a non-root user to run the application
