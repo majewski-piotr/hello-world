@@ -47,6 +47,7 @@ jobs:
         output: 'trivy-results.sarif'
         severity: 'CRITICAL,HIGH'
         exit-code: '1'
+        debug: true
 
     - name: Upload results
       uses: github/codeql-action/upload-sarif@v3
