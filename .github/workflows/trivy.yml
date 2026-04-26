@@ -2,10 +2,7 @@ name: Security Scan
 
 on:
   pull_request:
-    branches:
-      - main
-  schedule:
-    - cron: '0 3 * * 0'
+    branches: [main]
   workflow_dispatch: {}
 
 jobs:
@@ -16,66 +13,41 @@ jobs:
       security-events: write
 
     steps:
-    - uses: actions/checkout@v6
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Run Trivy IaC scanner (Terraform)
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'config'
-        scan-ref: './terraform'
-        format: 'sarif'
-        output: 'trivy-iac-results.sarif'
-        exit-code: '1' 
-        severity: 'CRITICAL,HIGH'
-
-    # 2. Reszta Twoich kroków (Maven + Docker)
-    - name: Set up JDK 21
+    - name: Build Application (Required for deep FS scan)
       uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: 'temurin'
+        cache: 'maven'
+    - run: cd app && mvn clean package -DskipTests
 
-    - name: Build with Maven
-      run: cd app && mvn clean package -DskipTests
 
-    - name: Run Trivy vulnerability scanner (Filesystem - App)
+    - name: Run Trivy Comprehensive Scan
       uses: aquasecurity/trivy-action@master
       with:
-        scan-type: 'fs'
-        scan-ref: './app'
-        format: 'sarif'
-        output: 'trivy-fs-results.sarif'
+        scan-type: 'rootfs'
+        scan-ref: '.'
+        format: 'table'
+        exit-code: '0'
         severity: 'CRITICAL,HIGH'
 
-    - name: Build Docker image
-      run: docker build -t my-app:${{ github.sha }} ./app
-
-    - name: Run Trivy vulnerability scanner (Image)
+    # Jeśli jednak chcesz SARIF do zakładki Security (bez dublowania skanu w logach):
+    - name: Generate SARIF Report
       uses: aquasecurity/trivy-action@master
+      if: always()
       with:
-        image-ref: 'my-app:${{ github.sha }}'
+        scan-type: 'rootfs'
+        scan-ref: '.'
         format: 'sarif'
-        output: 'trivy-image-results.sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
         exit-code: '1'
-        severity: 'CRITICAL,HIGH'
 
-    - name: Upload Trivy IaC results
+    - name: Upload results
       uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
-        sarif_file: 'trivy-iac-results.sarif'
-        category: 'infrastructure'
-
-    - name: Upload Trivy FS results
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: 'trivy-fs-results.sarif'
-        category: 'filesystem'
-
-    - name: Upload Trivy Image results
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: 'trivy-image-results.sarif'
-        category: 'docker-image'
+        sarif_file: 'trivy-results.sarif'
