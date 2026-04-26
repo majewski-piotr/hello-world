@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: 'Wybierz akcję Terraform'
+        description: 'choose Terraform action to perform'
         required: true
         default: 'apply'
         type: choice
@@ -34,7 +34,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-terraform-role
+          role-to-assume: arn:aws:iam::195275673810:role/Terraform
           aws-region: eu-central-1
 
       - name: Setup Terraform
