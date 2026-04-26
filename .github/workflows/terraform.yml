@@ -2,8 +2,7 @@ name: "Terraform Infrastructure"
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
   workflow_dispatch:
     inputs:
@@ -12,9 +11,7 @@ on:
         required: true
         default: 'apply'
         type: choice
-        options:
-          - apply
-          - destroy
+        options: [apply, destroy]
 
 permissions:
   id-token: write
@@ -23,13 +20,17 @@ permissions:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./terraform
     
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
+
+      - name: Setup Conftest
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/open-policy-agent/conftest/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+          curl -L -o conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${LATEST}/conftest_${LATEST}_Linux_x86_64.tar.gz"
+          tar xzf conftest.tar.gz
+          sudo mv conftest /usr/local/bin
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6
@@ -39,19 +40,28 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_wrapper: false
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform -chdir=terraform init
 
       - name: Terraform Plan
-        run: terraform plan -input=false ${{ github.event.inputs.action == 'destroy' && '-destroy' || '' }}
+        id: plan
+        run: |
+          # Używamy -chdir, aby wejść do folderu terraform
+          terraform -chdir=terraform plan -input=false -out=tfplan ${{ github.event.inputs.action == 'destroy' && '-destroy' || '' }}
+          terraform -chdir=terraform show -json tfplan > terraform/tfplan.json
+
+      - name: Conftest Static Analysis
+        run: |
+          # Ścieżka do planu: terraform/tfplan.json
+          # Ścieżka do polityk: policy (w root)
+          conftest test terraform/tfplan.json --policy policy/terraform
 
       - name: Terraform Apply
         if: >
-          (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
-        run: terraform apply -auto-approve -input=false
-
-      - name: Terraform Destroy
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
-        run: terraform destroy -auto-approve -input=false
+          ((github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')) &&
+          success()
+        run: terraform -chdir=terraform apply -auto-approve -input=false tfplan
