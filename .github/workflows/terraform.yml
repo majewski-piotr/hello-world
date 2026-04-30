@@ -49,14 +49,14 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |
-          # Używamy -chdir, aby wejść do folderu terraform
+          # Use -chdir to execute Terraform commands from the terraform directory.
           terraform -chdir=terraform plan -input=false -out=tfplan ${{ github.event.inputs.action == 'destroy' && '-destroy' || '' }}
           terraform -chdir=terraform show -json tfplan > terraform/tfplan.json
 
       - name: Conftest Static Analysis
         run: |
-          # Ścieżka do planu: terraform/tfplan.json
-          # Ścieżka do polityk: policy (w root)
+          # Terraform plan path: terraform/tfplan.json
+          # Policy folder path: policy (at repository root)
           conftest test terraform/tfplan.json --policy policy/terraform
 
       - name: Terraform Apply

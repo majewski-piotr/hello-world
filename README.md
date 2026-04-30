@@ -1,24 +1,71 @@
-# My Gallery 
+# My Gallery
 
-This my demo project in which i build test deploy my gallery java app along with necessary iaac and showcase my automation solutions along the way.
-Application will be displaying my hobby photos.
+A demo project that builds, tests, and deploys a Spring Boot gallery application using modern CI/CD and infrastructure tooling.
 
-stack includes:
+The repository demonstrates a minimal Java + Spring Boot application, Terraform infrastructure provisioning, and policy-driven validation using Rego.
 
-**dependabot** | **trivy**<br>
-**github actions**<br>
-**java 21** | **spring boot** | **maven**
+## Technology stack
 
+- Java 21
+- Spring Boot
+- Maven
+- GitHub Actions
+- Terraform
+- Open Policy Agent / Rego
+- Trivy
 
+## Project structure
 
-## Structure
+- `app/` - Spring Boot application source code, unit tests, and app-specific documentation
+- `terraform/` - Terraform infrastructure definitions and module configuration
+- `policy/` - Rego policy rules for Terraform plan validation
+- `.github/` - GitHub Actions workflows for CI, security, and infrastructure checks
 
-- `app/` - Contains the Spring Boot application
-- `.github/` - GitHub Actions workflows and Dependabot configuration
+## Getting started
+
+### Run the application locally
+
+```bash
+cd app
+./mvnw spring-boot:run
+```
+
+Open `http://localhost:8080` to access the running application.
+
+### Build the application
+
+```bash
+cd app
+./mvnw clean package
+```
+
+### Run tests
+
+```bash
+cd app
+./mvnw test
+```
+
+## Documentation coverage
+
+This repository now includes documentation and README files for all major directories:
+
+- `README.md` (root)
+- `app/README.md`
+- `terraform/README.md`
+- `policy/README.md`
+- `.github/README.md`
+
+All documentation is maintained in English for consistency and team accessibility.
 
 ## CI/CD
 
-This project uses GitHub Actions for continuous integration and security scanning.
+The repository uses GitHub Actions to validate code and infrastructure:
 
-- **Unit Tests**: Runs on pull requests to `main` branch, executing Maven tests.
-- **Security Scanning**: Uses Trivy to scan for vulnerabilities on pull requests to `main`.
+- `unit-tests.yml` runs Java unit tests on pull requests to `main`
+- `trivy.yml` scans for vulnerabilities, secrets, and other security issues
+- `terraform.yml` validates Terraform plans and runs policy checks
+
+## Notes
+
+The documentation has been updated to cover the application, infrastructure, policy, and workflow directories.
