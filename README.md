@@ -1,24 +1,62 @@
-# My Gallery 
+# My Gallery
 
-This my demo project in which i build test deploy my gallery java app along with necessary iaac and showcase my automation solutions along the way.
-Application will be displaying my hobby photos.
+A demo project that builds, tests, and deploys a Spring Boot gallery application with infrastructure as code and automated CI/CD validation.
 
-stack includes:
+The application is a minimal example for showcasing Java 21, Spring Boot, Maven, GitHub Actions, and Terraform-driven infrastructure.
 
-**dependabot** | **trivy**<br>
-**github actions**<br>
-**java 21** | **spring boot** | **maven**
+## Technology stack
 
+- **Java 21**
+- **Spring Boot**
+- **Maven**
+- **GitHub Actions**
+- **Terraform**
+- **Dependabot**
+- **Trivy**
 
+## Project structure
 
-## Structure
+- `app/` - Spring Boot application source code and Maven build configuration
+- `.github/` - GitHub Actions workflows for CI and security scanning
+- `policy/` - Policy definitions used by infrastructure and static analysis tooling
+- `terraform/` - Terraform infrastructure configuration
 
-- `app/` - Contains the Spring Boot application
-- `.github/` - GitHub Actions workflows and Dependabot configuration
+## Getting started
+
+### Run locally
+
+```bash
+cd app
+./mvnw spring-boot:run
+```
+
+Then open `http://localhost:8080` in your browser.
+
+### Build the application
+
+```bash
+cd app
+./mvnw clean package
+```
+
+### Run unit tests
+
+```bash
+cd app
+./mvnw test
+```
+
+## Documentation
+
+This repository includes updated inline Javadoc comments for the Spring Boot application and test classes. The root README and application README also document the project layout, build steps, and test commands.
 
 ## CI/CD
 
-This project uses GitHub Actions for continuous integration and security scanning.
+The repository uses GitHub Actions to validate code and scan for issues:
 
-- **Unit Tests**: Runs on pull requests to `main` branch, executing Maven tests.
-- **Security Scanning**: Uses Trivy to scan for vulnerabilities on pull requests to `main`.
+- `unit-tests.yml` runs the Maven unit tests on pull requests to `main`
+- `trivy.yml` runs vulnerability and secrets scanning on pull requests
+
+## Notes
+
+This branch focuses on improving documentation quality and ensuring that code comments follow standard Java documentation conventions.
