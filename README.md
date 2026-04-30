@@ -48,15 +48,23 @@ cd app
 
 ## Documentation
 
-This repository includes updated inline Javadoc comments for the Spring Boot application and test classes. The root README and application README also document the project layout, build steps, and test commands.
+This repository includes documentation for all primary directories:
+
+- `app/` contains Java code with updated Javadoc and an application-specific README.
+- `terraform/` includes infrastructure documentation and Terraform source comments.
+- `policy/` includes Rego policy documentation and an explanation of the tag enforcement rule.
+- `.github/` includes a workflow README describing the current automation pipelines.
+
+For more details, see `app/README.md`, `terraform/README.md`, `policy/README.md`, and `.github/README.md`.
 
 ## CI/CD
 
-The repository uses GitHub Actions to validate code and scan for issues:
+The repository uses GitHub Actions to validate code, deploy infrastructure, and scan for issues:
 
-- `unit-tests.yml` runs the Maven unit tests on pull requests to `main`
-- `trivy.yml` runs vulnerability and secrets scanning on pull requests
+- `.github/workflows/unit-tests.yml` runs Maven unit tests on pull requests to `main`
+- `.github/workflows/trivy.yml` runs vulnerability scanning, dependency and container analysis, and secret detection
+- `.github/workflows/terraform.yml` plans and applies Terraform infrastructure changes and runs Conftest policy validation
 
 ## Notes
 
-This branch focuses on improving documentation quality and ensuring that code comments follow standard Java documentation conventions.
+This branch improves documentation for application code, infrastructure configuration, policy rules, and CI workflows.
