@@ -9,7 +9,7 @@ expected_tags := {
     "created": "terraform"
 }
 
-# W Rego v1 dla zbiorów (sets) musisz użyć: deny contains msg if { ... }
+# In Rego v1 for sets, use the `deny contains msg if { ... }` pattern.
 deny contains msg if {
     some resource in input.resource_changes
     

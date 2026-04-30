@@ -1,9 +1,11 @@
 variable "project_name" {
-  type    = string
-  default = "my-gallery"
+  description = "Logical name used for the project and resource tagging."
+  type        = string
+  default     = "my-gallery"
 }
 
 variable "aws_region" {
-  type    = string
-  default = "eu-central-1"
+  description = "AWS region where infrastructure resources are created."
+  type        = string
+  default     = "eu-central-1"
 }
