@@ -35,7 +35,7 @@ jobs:
           outputs: type=docker,dest=/tmp/my-app.tar
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: built-app
           path: |
