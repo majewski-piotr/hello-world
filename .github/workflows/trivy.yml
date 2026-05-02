@@ -28,7 +28,7 @@ jobs:
 
       # Building image locally and saving to .tar for cross-job scanning
       - name: Build Docker Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./app
           tags: my-app:latest
